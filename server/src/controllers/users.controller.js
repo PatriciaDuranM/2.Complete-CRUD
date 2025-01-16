@@ -1,21 +1,39 @@
-// const usersController = [];
-// const fs = require("fs");
-// const path = require("path");
-// const pathFile = path.resolve(__dirname, "../../data/users.json");
+const fs = require("fs");
+const path = require("path");
+const pathFile = path.resolve(__dirname, "../../data/users.json");
+const usersController = {};
 
-// usersController.getAllUsers = (req, res) => {
-//   /*Primero leemos*/
-//   fs.readFile(pathFile, (error, data) => {
-//     if (error) {
-//       /*enviamos una respuesta de error*/
-//       res.status(500).json({ error: "Error al leer el archivo" });
-//     } else {
-//       /*Guardamos la información leida*/
-//       const jsonData = JSON.parse(data);
-//       res.status(200).json(jsonData);
-//     }
-//   });
-// };
+usersController.getAllUsers = (req, res) => {
+  /*Primero leemos*/
+  fs.readFile(pathFile, (error, data) => {
+    if (error) {
+      /*enviamos una respuesta de error*/
+      res.status(500).json({ error: "Error al leer el archivo" });
+    } else {
+      /*Guardamos la información leida*/
+      const jsonData = JSON.parse(data);
+      res.status(200).json(jsonData);
+    }
+  });
+};
+
+usersController.getUserById = (req, res) => {
+  const userId = req.params.id;
+
+  fs.readFile(pathFile, (error, data) => {
+    if (error) {
+      res.status(500).json({ error: "Error al leer el archivo" });
+    } else {
+      const jsonData = JSON.parse(data);
+      const userFound = jsonData.find((user) => user.userId === userId);
+      if (userFound) {
+        res.status(200).json([userFound]);
+      } else {
+        res.status(404).json({ error: "Usuario no encontrado" });
+      }
+    }
+  });
+};
 
 // usersController.createNewUser = (req, res) => {
 //   /*Los nuevos datos que introducimos son en req.body*/
@@ -100,22 +118,4 @@
 //   });
 // };
 
-// usersController.getUserById = (req, res) => {
-//   const userId = req.params.id;
-
-//   fs.readFile(pathFile, (error, data) => {
-//     if (error) {
-//       res.status(500).json({ error: "Error al leer el archivo" });
-//     } else {
-//       const jsonData = JSON.parse(data);
-//       const userFound = jsonData.find((user) => user.userId === userId);
-//       if (userFound) {
-//         res.status(200).json([userFound]);
-//       } else {
-//         res.status(404).json({ error: "Usuario no encontrado" });
-//       }
-//     }
-//   });
-// };
-
-// module.exports = usersController;
+module.exports = usersController;
