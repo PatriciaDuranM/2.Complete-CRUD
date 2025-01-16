@@ -18,7 +18,7 @@ usersController.getAllUsers = (req, res) => {
 };
 
 usersController.getUserById = (req, res) => {
-  const userId = req.params.id;
+  const { id } = req.params;
 
   fs.readFile(pathFile, (error, data) => {
     if (error) {
