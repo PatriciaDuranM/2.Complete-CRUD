@@ -26,7 +26,9 @@ usersController.getUserById = (req, res) => {
     if (error) {
       res.status(500).json({ error: "Error al leer el archivo" });
     } else {
+      // pasamos el dato json a js para poder tratarlo y buscar el usuario
       const jsonData = JSON.parse(data);
+      // buscamos el usuario por id
       const userFound = jsonData.find((user) => user.userId === id);
       if (userFound) {
         res.status(200).json(userFound);
@@ -38,7 +40,7 @@ usersController.getUserById = (req, res) => {
 };
 
 usersController.createNewUser = (req, res) => {
-  /*Los nuevos datos que introducimos son en req.body*/
+  /*Los nuevos datos que introducimos están en req.body y ademas le metemos un id*/
   const newUser = { userId: v4(), ...req.body };
   /*Primero Leer los datos disponibles*/
   fs.readFile(pathFile, (error, data) => {
@@ -90,33 +92,44 @@ usersController.deleteUser = (req, res) => {
 usersController.updateUsers = (req, res) => {
   /*buscar por id*/
   const userId = req.params.id;
+  const userData = req.body;
   /*primero leemos para buscar*/
   fs.readFile(pathFile, (error, data) => {
     if (error) {
       /*enviamos una respuesta de error si no se ha leido bien*/
-      res.status(500).json({ error: "Error al leer el archivo" });
-    } else {
-      /*guardar los datos originales*/
-      const jsonData = JSON.parse(data);
-      /*econtrar el usuari por el id*/
-      const userFound = jsonData.find((user) => user.userId === userId);
-      if (userFound) {
-        res.status(200).json(userFound);
-      } else {
-        res.status(404).json({ error: "Usuario no encontrado" });
-      }
-      /*escribir los nuevos datos*/
-      userFound.name = req.body.name || userFound.name;
-      userFound.email = req.body.email || userFound.email;
-      /*escribir lo nuevo*/
-      fs.writeFile(pathFile, JSON.stringify(jsonData), (error) => {
-        if (error) {
-          res.status(500).json({ error: "Error al guardar la informacion" });
-        } else {
-          res.status(202).json(jsonData);
-        }
-      });
+      return res.status(500).json({ error: "Error al leer el archivo" });
     }
+    /*guardar los datos originales*/
+    const jsonData = JSON.parse(data);
+    /*econtrar el usuario por el id, pero tenemos que encontrarlo por posicion porque por id lo guarda de nuevo y tenemos dos usuarios con el mismo id*/
+    const userFound = jsonData.find((user) => user.userId === userId);
+    if (!userFound) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    // para escribir los nuevos datos es mejor esta forma que recoge todo
+    const userUpdated = { ...userFound, ...userData };
+
+    const usersUpdated = jsonData.map((user) => {
+      if (user.userId === userUpdated.userId) {
+        user = userUpdated;
+      }
+      return user;
+    });
+
+    /*escribir los nuevos datos aunque esta es una forma antigua
+      userFound.name = req.body.name || userFound.name;
+      userFound.email = req.body.email || userFound.email;*/
+    /*escribir lo nuevo*/
+
+    fs.writeFile(pathFile, JSON.stringify(usersUpdated), (error) => {
+      if (error) {
+        return res
+          .status(500)
+          .json({ error: "Error al guardar la informacion" });
+      }
+      return res.status(202).json(userUpdated);
+    });
   });
 };
 
